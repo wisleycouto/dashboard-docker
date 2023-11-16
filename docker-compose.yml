@@ -1,0 +1,72 @@
+version: '3.1'
+services:
+  apipainel-db:
+    container_name: apipainel_db
+    image: postgres
+    environment:
+      POSTGRES_DB: 'dbapipainel'
+      POSTGRES_PASSWORD: 'Mec_2022'
+      POSTGRES_USER: 'dbapipainel'
+    ports:
+      - '5432:5432'
+    volumes:
+      - ./db/dashboard-backend/pgdata:/var/lib/postgresql
+    networks:
+      - apipainel
+
+  apipainel-api:
+    container_name: apipainel_api
+    build:
+      context: ../dashboard-backend
+      dockerfile: Dockerfile
+    ports:
+      - 7080:80
+    environment:
+      APP_ENV: 'local'
+      APP_DEBUG: 'true'
+      APP_URL: 'http://localhost:7080'
+      DATABASE_DRIVER: 'pdo_pgsql'
+      DATABASE_HOST: apipainel_db
+      DATABASE_PORT: '5432'
+      DATABASE_NAME: 'dbapipainel'
+      DATABASE_USER: 'dbapipainel'
+      DATABASE_PASSWORD: 'Mec_2022'
+      REDIRECT_URI: 'http://dsv-dashboard.container.mec.gov.br' #provisorio
+      URL_PROVIDER: 'https://sso.staging.acesso.gov.br' #provisorio
+      CLIENT_ID: 'dsv-dashboard.container.mec.gov.br' #provisorio
+      SECRET: '42a8d57b-3243-4780-b4e8-c58f5bfb5976' #provisorio
+      SCOPE: 'openid+email+phone+profile' #provisorio
+      URL_SERVICO: 'https://api.staging.acesso.gov.br' #provisorio
+      NONCE: '3ed8657fd74c' #provisorio
+      CONTENT_TYPE: ''
+      AUTHORIZATION: ''
+      GRANT_TYPE: 'authorization_code'
+      URL_LOGOUT: 'https://sso.staging.acesso.gov.br/logout' #provisorio
+      restart: always
+    volumes:
+      - ../dashboard-backend:/var/www/html/api
+    depends_on:
+      - apipainel-db
+    networks:
+      - apipainel
+
+  dashboard-frontend:
+    container_name: dashboard_frontend 
+    build:
+      context: .
+      dockerfile: Dockerfile.react
+    environment:
+      REACT_APP_BASE_URL_BACKEND: ' http://localhost:7080/api'
+    volumes:
+      - ../dashboard-frontend:/var/www/html
+    ports:
+      - 7081:3000
+    command: >
+       sh -c "npm install && npm start" 
+  
+    networks:
+      - apipainel
+
+networks:
+  apipainel:
+    driver: bridge
