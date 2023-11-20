@@ -47,7 +47,7 @@ services:
     environment:
       REACT_APP_BASE_URL_BACKEND: ' http://localhost:7080/api'
     volumes:
-      - ../react-google-charts:/var/www/html
+      - ../react-google-charts/google-charts:/var/www/html
     ports:
       - 7081:3000
     command: >
